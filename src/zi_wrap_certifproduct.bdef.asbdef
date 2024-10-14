@@ -1,10 +1,12 @@
 managed
 implementation in class zbp_i_wrap_certifproduct unique;
 strict ( 1 );
+with draft;
 
 define behavior for ZI_WRAP_CERTIFPRODUCT alias Certificate
 persistent table zwrap_certif
-lock master
+draft table zbwrap_certif
+lock master total etag LocalLastChangedAt
 authorization master ( instance )
 //etag master <field_name>
 {
@@ -12,14 +14,29 @@ authorization master ( instance )
   update;
   delete;
 
-  association _Stats { create; }
+  association _Stats { create; with draft; }
+
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  determination setInitialValue on modify { create; }
+
+  validation checkMaterial on save{ field Matnr; create; update; }
+
+  action ( features: instance ) NewVersion result [1] $self;
+  action ( features: instance ) ActiveVersion result [1] $self;
+  action ( features: instance ) InactiveVersion result [1] $self;
 
   field ( numbering : managed, readonly ) CertUuid;
-  field ( readonly ) Description;
+  field ( readonly ) Description, Version;
   field ( mandatory ) Matnr;
 
   mapping for zwrap_certif
     {
+      CertUuid           = cert_uuid;
       Matnr              = matnr;
       Version            = version;
       CertStatus         = cert_status;
@@ -34,6 +51,7 @@ authorization master ( instance )
 
 define behavior for ZI_WRAP_CERTIFSTPRODUCT alias CertificateST
 persistent table zwrap_certif_st
+draft table zbwrap_certif_st
 lock dependent by _Certif
 authorization dependent by _Certif
 //etag master <field_name>

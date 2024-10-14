@@ -1,5 +1,6 @@
 projection;
 strict ( 1 );
+use draft;
 
 define behavior for ZC_WRAP_CERTIFPRODUCT alias Certificate
 {
@@ -7,7 +8,18 @@ define behavior for ZC_WRAP_CERTIFPRODUCT alias Certificate
   use update;
   use delete;
 
-  use association _Stats { create; }
+  use association _Stats { create; with draft; }
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use action NewVersion;
+  use action ActiveVersion;
+  use action InactiveVersion;
+
 }
 
 define behavior for ZC_WRAP_CERTIFSTPRODUCT alias CertificateST
