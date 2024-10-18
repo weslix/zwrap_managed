@@ -70,7 +70,7 @@ annotate entity ZC_WRAP_CERTIFPRODUCT with
     @UI.identification: [{ position: 31 }]
     @UI.lineItem: [{ position: 31 }]
     @UI.fieldGroup: [{ qualifier: 'HeaderData' }]
-    @EndUserText.label: 'Status'
+    @EndUserText.label: 'Status' 
     CertStatus;
 
     @UI.identification:[{ position: 40 }]

@@ -1,5 +1,5 @@
 projection;
-strict ( 1 );
+strict ( 2 );
 use draft;
 
 define behavior for ZC_WRAP_CERTIFPRODUCT alias Certificate

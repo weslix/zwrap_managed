@@ -22,6 +22,8 @@ CLASS lhc_Certificate DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS newversion FOR MODIFY
       IMPORTING keys FOR ACTION certificate~newversion RESULT result.
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR certificate RESULT result.
 
 ENDCLASS.
 
@@ -30,6 +32,42 @@ ENDCLASS.
 CLASS lhc_Certificate IMPLEMENTATION.
 
   METHOD get_instance_authorizations.
+    READ ENTITIES OF zi_wrap_certifproduct IN LOCAL MODE
+        ENTITY Certificate
+        FIELDS ( Version CertStatus )
+        WITH CORRESPONDING #( keys )
+        RESULT DATA(lt_certificates).
+
+    CHECK lt_certificates IS NOT INITIAL.
+    LOOP AT lt_certificates INTO DATA(ls_certificates).
+      APPEND VALUE #( LET upd_auth = COND #( WHEN ls_certificates-Version > 10
+                                              THEN if_abap_behv=>auth-unauthorized
+                                              ELSE if_abap_behv=>auth-allowed )
+                          del_auth = COND #( WHEN ls_certificates-CertStatus <> 2
+                                                THEN if_abap_behv=>auth-unauthorized
+                                                ELSE if_abap_behv=>auth-allowed )
+
+                      IN  %tky                = ls_certificates-%tky
+                          %update             = upd_auth
+                          %action-Edit        = upd_auth
+                          %action-NewVersion  = upd_auth
+                          %delete             = del_auth  ) TO result.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_global_authorizations.
+
+*    IF requested_authorizations-%create = if_abap_behv=>mk-on.
+*        "Authority Check
+*        result-%create = if_abap_behv=>auth-unauthorized.
+*    ENDIF.
+
+*    IF requested_authorizations-%action-NewVersion = if_abap_behv=>mk-on.
+*        "Authority Check
+*        result-%action-NewVersion = if_abap_behv=>auth-unauthorized.
+*    ENDIF.
+
   ENDMETHOD.
 
   METHOD setInitialValue.
@@ -66,6 +104,7 @@ CLASS lhc_Certificate IMPLEMENTATION.
       ls_state_value-Version      = 1.
       ls_state_value-StatusOld    = space.
       ls_state_value-Status       = 1.
+      ls_state_value-%cid         = ls_state-CertUuid .
 
       ls_state_value-%control-Version         = if_abap_behv=>mk-on.
       ls_state_value-%control-StatusOld       = if_abap_behv=>mk-on.
@@ -145,6 +184,7 @@ CLASS lhc_Certificate IMPLEMENTATION.
       ls_state_value-Version      = ls_certificates-Version.
       ls_state_value-StatusOld    = ls_certificates-CertStatus.
       ls_state_value-Status       = 3. "novo
+      ls_state_value-%cid         = ls_state-CertUuid .
 
       ls_state_value-%control-Version         = if_abap_behv=>mk-on.
       ls_state_value-%control-StatusOld       = if_abap_behv=>mk-on.
@@ -215,6 +255,7 @@ CLASS lhc_Certificate IMPLEMENTATION.
       ls_state_value-Version      = ls_certificates-Version.
       ls_state_value-StatusOld    = ls_certificates-CertStatus.
       ls_state_value-Status       = 2. "novo
+      ls_state_value-%cid         = ls_state-CertUuid .
 
       ls_state_value-%control-Version         = if_abap_behv=>mk-on.
       ls_state_value-%control-StatusOld       = if_abap_behv=>mk-on.
@@ -285,6 +326,7 @@ CLASS lhc_Certificate IMPLEMENTATION.
       ls_state_value-Version      = ls_certificates-Version + 1.
       ls_state_value-StatusOld    = ls_certificates-CertStatus.
       ls_state_value-Status       = 1. "novo
+      ls_state_value-%cid         = ls_state-CertUuid .
 
       ls_state_value-%control-Version         = if_abap_behv=>mk-on.
       ls_state_value-%control-StatusOld       = if_abap_behv=>mk-on.
